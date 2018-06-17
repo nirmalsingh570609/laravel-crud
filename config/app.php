@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'https://laravel-cruds.herokuapp.com/'),
 
     /*
     |--------------------------------------------------------------------------
@@ -104,7 +104,7 @@ return [
     |
     */
 
-    'key' => env('APP_KEY'),
+    'key' => 'base64:LHiyTSQJIkmzbk3VRJHBshRBAvFjSPKNS0zZusDknxA=',
 
     'cipher' => 'AES-256-CBC',
 
