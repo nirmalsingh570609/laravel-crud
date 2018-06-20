@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Validator;
 use Illuminate\Http\Request;
 use App\User;
 use Illuminate\Http\Response;
@@ -9,7 +10,7 @@ use App\Http\Requests\UserRequest;
 
 /**
  * @access public
- * @author Uday Kumar
+ * @author Nirmal Singh
  * @version 1.0.0
  */
 class UserController extends Controller {
@@ -32,9 +33,14 @@ class UserController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function index() {
-        $user = $this->user->all();
-        return response()->json(['data' => $user,
+        try{
+            $user = $this->user->all();
+            return response()->json(['data' => $user,
             'status' => Response::HTTP_OK]);
+        } catch(Exception $e){
+            return response()->json($e->getMessage());
+        }
+        
     }
     
     /**
@@ -43,14 +49,32 @@ class UserController extends Controller {
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(UserRequest $request) { 
-        $data = $this->request->all();
-        $this->user->name = $data['name'];
-        $this->user->email = $data['email'];
-        $this->user->password = $data['password'];
-        $this->user->save();
+    public function store(Request $request) { 
+        try {
+            
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|max:127|unique:users,name',
+                'email' => 'required|email|max:127|unique:users,email',
+                'password' => 'required'
+            ]);
+    
         
-        return response()->json(['status' => Response::HTTP_CREATED]);
+            if($validator->fails()){
+        
+                return response()->json($validator->messages());
+            } 
+            $data = $this->request->all();
+            $this->user->name = $data['name'];
+            $this->user->email = $data['email'];
+            $this->user->password = $data['password'];
+            $this->user->save();
+        
+            return response()->json(['status' => Response::HTTP_CREATED,'message'=>'User created']);
+
+        } catch (Exception $e){
+            return response()->json($e->getMessage());
+        }
+        
     }
     
     /**
@@ -61,16 +85,28 @@ class UserController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function update($id) {
-        $data = $this->request->all();
+        try {
+
+            $data = $this->request->all();
         
-        $user = $this->user->find($id);
+            $user = $this->user->find($id);
+
+            if(!empty($user)) {
+                $user->name = $data['name'];
+                $user->email = $data['email'];
+                $user->password = $data['password'];
+                $user->save();
         
-        $user->name = $data['name'];
-        $user->email = $data['email'];
-        $user->password = $data['password'];
-        $user->save();
+                return response()->json(['status' => Response::HTTP_OK, 'message'=>'user updated.']);
+            } else {
+                return response()->json(['status' => Response::HTTP_OK, 'message'=>'User not found']);
+            }     
+            
+
+        } catch (Exception $e) {
+            return response()->json($e->getMessage());
+        }
         
-        return response()->json(['status' => Response::HTTP_OK]);
     }
     
     /**
@@ -80,10 +116,16 @@ class UserController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function destroy($id) {
-        $user = $this->user->find($id);
-        $user->delete();
+        try {
+
+            $user = $this->user->find($id);
+            $user->delete();
+            
+            return response()->json(['status' => Response::HTTP_OK, 'message'=>'user deleted.']);
+        } catch (Exception $e) {
+            return response()->json($e->getMessage());
+        }
         
-        return response()->json(['status' => Response::HTTP_OK]);
     }
     
 }
